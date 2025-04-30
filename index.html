@@ -26,6 +26,10 @@
                 width: 2000px;
             }
 
+            #fenError {
+                color: red;
+            }
+
             .cell {
                 box-sizing: border-box;
                 width: var(--size);
@@ -88,13 +92,25 @@
                     return `w${name.toLowerCase()}`;
                 }
                 if (name === name.toLowerCase()) {
-                    return `b${name.toUpperCase()}`;
+                    return `b${name}`;
                 }
             }
 
             function updateImage(element) {
+                if (myglobals.piece === "none") {
+                    element.removeAttribute("data-piece");
+                    return;
+                }
+
                 element.style.backgroundImage = `url('./img/${nameFor(myglobals.piece)}.png')`;
                 element.setAttribute("data-piece", myglobals.piece);
+            }
+
+            function resetBoard() {
+                const cells = Array.from(document.querySelectorAll(".cell"));
+
+                myglobals.piece = "none";
+                cells.forEach(updateImage);
             }
 
             function init() {
@@ -132,6 +148,11 @@
 
                     makeFen();
                 });
+
+                document.getElementById("fenSubmit").addEventListener("click", event => {
+                    event.stopPropagation();
+                    parseFen();
+                })
             }
         </script>
     </head>
@@ -215,6 +236,12 @@
 
         <div>
             <p>Resulting FEN:</p> <span id="fen">8/8/8/8/8/8/8/8</span>
+        </div>
+
+        <div>
+            <input id="fenInput" name="fenInput" type="text" placeholder="Paste a FEN..." />
+            <button id="fenSubmit">Parse</button>
+            <div id="fenError"></div>
         </div>
         <script>
             window.onload = init();
