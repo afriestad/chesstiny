@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            :root {
+                --border: 1px solid dimgrey;
+                --size: 64px;
+            }
+            
+            #board {
+                width: calc(8 * var(--size));
+                height: calc(8 * var(--size));
+                border-top: var(--border);
+                border-left: var(--border);
+
+                display: flex;
+                flex-flow: row wrap;
+
+                background-color: lightgrey;
+            }
+
+            #piece {
+                display: flex;
+                flex-flow: row nowrap;
+
+                width: 2000px;
+            }
+
+            .cell {
+                box-sizing: border-box;
+                width: var(--size);
+                height: var(--size);
+                border-bottom: var(--border);
+                border-right: var(--border);
+
+                background-color: #202020;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-size: 48px 48px;
+
+            }
+
+            .bottom {
+                border-top: var(--border);
+                height: calc(var(--size) + 1px);
+                margin-top: -1px;
+            }
+
+            .right {
+                border-left: var(--border);
+                width: calc(var(--size) + 1px);
+                margin-left: -1px;
+            }
+
+            .pusher-6 {
+                width: calc(6 * var(--size));
+            }
+
+            .pusher-2 {
+                width: calc(2 * var(--size));
+            }
+
+            .image {
+                width: 48px;
+                height: 48px;
+                padding: 7px;
+                text-align: center;
+            }
+
+            .empty {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .selected {
+                background-color: aqua;
+            }
+        </style>
+
+        <script src="./fen.js"></script>
+
+        <script>
+            const myglobals = {piece: "none"};
+
+            function nameFor(name) {
+                if (name === name.toUpperCase()) {
+                    return `w${name.toLowerCase()}`;
+                }
+                if (name === name.toLowerCase()) {
+                    return `b${name.toUpperCase()}`;
+                }
+            }
+
+            function updateImage(element) {
+                element.style.backgroundImage = `url('./img/${nameFor(myglobals.piece)}.png')`;
+                element.setAttribute("data-piece", myglobals.piece);
+            }
+
+            function init() {
+                // Handle changes to the board color selector
+                document.getElementById("color").addEventListener("change", (event) => {
+                    event.stopPropagation();
+                    const newColor = event.target.value;
+
+                    document.getElementById("board").style.backgroundColor = newColor;
+                });
+
+                // Handle changes to the selected piece
+                document.getElementById("piece").addEventListener("click", (event) => {
+                    event.stopPropagation();
+
+                    myglobals.piece = event.target.id;
+
+                    Array.from(event.currentTarget.children).forEach(
+                        (element) => element.classList.remove("selected")
+                    );
+                    event.target.classList.add("selected");
+                });
+
+                // Handle board clicks
+                document.getElementById("board").addEventListener("click", (event) => {
+                    const target = event.target.classList.contains("cell") ? event.target : event.parent;
+
+                    if (!target.classList.contains("cell")) {
+                        return;
+                    } else if (target.classList.contains("center")) {
+                        Array.from(document.querySelectorAll(".center")).forEach(updateImage);
+                    } else {
+                        updateImage(target);
+                    }
+
+                    makeFen();
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <label for="color">Select Board Color (cosmetic)</label>
+        <select name="color" id="color">
+            <option value="lightgrey" selected>Light Grey</option>
+            <option value="darkgrey">Dark Grey</option>
+            <option value="lightcoral">Light Red</option>
+            <option value="darkred">Dark Red</option>
+        </select>
+
+        <p>Select Piece</p>
+        <div id="piece">
+            <div id="none" class="image empty selected">None</div>
+
+            <img id="B" class="image" src="./img/wb.png" />
+            <img id="K" class="image" src="./img/wk.png" />
+            <img id="N" class="image" src="./img/wn.png" />
+            <img id="P" class="image" src="./img/wp.png" />
+            <img id="Q" class="image" src="./img/wq.png" />
+            <img id="R" class="image" src="./img/wr.png" />
+
+            <img id="b" class="image" src="./img/bb.png" />
+            <img id="k" class="image" src="./img/bk.png" />
+            <img id="n" class="image" src="./img/bn.png" />
+            <img id="p" class="image" src="./img/bp.png" />
+            <img id="q" class="image" src="./img/bq.png" />
+            <img id="r" class="image" src="./img/br.png" />
+        </div>
+
+        <div id="board">
+            <div id="a8" class="cell"></div>
+            <div id="b8" class="cell"></div>
+            <div id="c8" class="cell"></div>
+            <div id="d8" class="cell"></div>
+            <div id="e8" class="cell"></div>
+            <div id="f8" class="cell"></div>
+            <div id="g8" class="cell"></div>
+            <div id="h8" class="cell"></div>
+
+            <div id="a7" class="cell"></div>
+            <div class="pusher-6"></div>
+            <div id="h7" class="cell right"></div>
+
+            <div id="a6" class="cell"></div>
+            <div class="pusher-6"></div>
+            <div id="h6" class="cell right"></div>
+
+            <div id="a5" class="cell"></div>
+            <div class="pusher-2"></div>
+            <div id="d5" class="center cell bottom right"></div>
+            <div id="e5" class="center cell bottom"></div>
+            <div class="pusher-2"></div>
+            <div id="h5" class="cell right"></div>
+
+            <div id="a4" class="cell"></div>
+            <div class="pusher-2"></div>
+            <div id="d4" class="center cell right"></div>
+            <div id="e4" class="center cell"></div>
+            <div class="pusher-2"></div>
+            <div id="h4" class="cell right"></div>
+
+            <div id="a3" class="cell"></div>
+            <div class="pusher-6"></div>
+            <div id="h3" class="cell right"></div>
+
+            <div id="a2" class="cell"></div>
+            <div class="pusher-6"></div>
+            <div id="h2" class="cell right"></div>
+
+            <div id="a1" class="cell"></div>
+            <div id="b1" class="cell bottom"></div>
+            <div id="c1" class="cell bottom"></div>
+            <div id="d1" class="cell bottom"></div>
+            <div id="e1" class="cell bottom"></div>
+            <div id="f1" class="cell bottom"></div>
+            <div id="g1" class="cell bottom"></div>
+            <div id="h1" class="cell"></div>
+        </div>
+
+        <div>
+            <p>Resulting FEN:</p> <span id="fen">8/8/8/8/8/8/8/8</span>
+        </div>
+        <script>
+            window.onload = init();
+        </script>
+    </body>
+</html>
