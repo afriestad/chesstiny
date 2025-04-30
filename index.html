@@ -99,6 +99,7 @@
             function updateImage(element) {
                 if (myglobals.piece === "none") {
                     element.removeAttribute("data-piece");
+                    element.style.backgroundImage = "";
                     return;
                 }
 
@@ -108,6 +109,10 @@
 
             function resetBoard() {
                 const cells = Array.from(document.querySelectorAll(".cell"));
+
+                Array.from(document.getElementById("piece").children).forEach(
+                    (element) => element.classList.remove("selected")
+                );
 
                 myglobals.piece = "none";
                 cells.forEach(updateImage);
@@ -152,6 +157,12 @@
                 document.getElementById("fenSubmit").addEventListener("click", event => {
                     event.stopPropagation();
                     parseFen();
+                });
+
+                document.getElementById("resetBoard").addEventListener("click", event => {
+                    event.stopPropagation();
+                    resetBoard();
+                    makeFen();
                 })
             }
         </script>
@@ -164,6 +175,10 @@
             <option value="lightcoral">Light Red</option>
             <option value="darkred">Dark Red</option>
         </select>
+
+        <div>
+            <button id="resetBoard">Reset Board</button>
+        </div>
 
         <p>Select Piece</p>
         <div id="piece">
@@ -234,9 +249,9 @@
             <div id="h1" class="cell"></div>
         </div>
 
-        <div>
-            <span>Resulting FEN:</span> <span id="fen">8/8/8/8/8/8/8/8</span>
-        </div>
+        <p>
+            <b>Resulting FEN:</b> <b id="fen">8/8/8/8/8/8/8/8</b>
+        </p>
 
         <div>
             <p>Parse a FEN to board</p>
