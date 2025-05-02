@@ -6,13 +6,13 @@
 
         <style>
             :root {
-                --border: 2px solid transparent;
+                --border-width: 2px;
+                --border: var(--border-width) solid transparent;
                 --size: 64px;
 
-                --s: 60px;  /* control the size of the grid */
-                --t: 2px;   /* the thickness */
+                
 
-                --grid-gradient: conic-gradient(from 90deg at var(--t) var(--t), transparent 25%, #acb6c0 0);
+                --grid-gradient: conic-gradient(from 90deg at var(--border-width) var(--border-width), transparent 25%, #acb6c0 0);
 
                 --light-grey-gradient: linear-gradient(to bottom right, #a5b5ca 0%, #b4c5da 35%, #b4c5da 65%, #d5dde9 100%);
                 --dark-grey-gradient: linear-gradient(to bottom right, #384155 0%, #5a6572 35%, #5a6572 65%, #878f97 100%);
@@ -27,8 +27,8 @@
             }
             
             #board {
-                width: calc(8 * var(--size) + 2px);
-                height: calc(8 * var(--size) + 2px);
+                width: calc(8 * var(--size) + var(--border-width));
+                height: calc(8 * var(--size) + var(--border-width));
 
                 display: flex;
                 flex-flow: row wrap;
@@ -79,25 +79,25 @@
             }
 
             .top {
-                height: calc(var(--size) + 2px);
+                height: calc(var(--size) + var(--border-width));
                 border-top: var(--border);
             }
 
             .left {
-                width: calc(var(--size) + 2px);
+                width: calc(var(--size) + var(--border-width));
                 border-left: var(--border);
             }
 
             .bottom {
                 border-top: var(--border);
-                height: calc(var(--size) + 2px);
-                margin-top: -2px;
+                height: calc(var(--size) + var(--border-width));
+                margin-top: calc(0 - var(--border-width));
             }
 
             .right {
                 border-left: var(--border);
-                width: calc(var(--size) + 2px);
-                margin-left: -2px;
+                width: calc(var(--size) + var(--border-width));
+                margin-left: calc(0 - var(--border-width));
             }
 
             .center {
@@ -126,7 +126,7 @@
             }
 
             .selected {
-                border: 2px solid white;
+                border: var(--border-width) solid white;
                 padding: 5px;
             }
 
@@ -179,7 +179,7 @@
             }
 
             p {
-                max-width: 84ch;
+                max-width: 80ch;
                 word-wrap: break-word;
             }
         </style>
