@@ -1,59 +1,107 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link href="https://fontlay.com/css2?family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+        <link href="https://fontlay.com/css2?family=Zilla+Slab+Highlight:wght@400;700&display=swap" rel="stylesheet">
+
         <style>
             :root {
-                --border: 1px solid dimgrey;
+                --border: 2px solid transparent;
                 --size: 64px;
+
+                --s: 60px;  /* control the size of the grid */
+                --t: 2px;   /* the thickness */
+
+                --grid-gradient: conic-gradient(from 90deg at var(--t) var(--t), transparent 25%, #acb6c0 0);
+
+                --light-grey-gradient: linear-gradient(to bottom right, #a5b5ca 0%, #b4c5da 35%, #b4c5da 65%, #d5dde9 100%);
+                --dark-grey-gradient: linear-gradient(to bottom right, #384155 0%, #5a6572 35%, #5a6572 65%, #878f97 100%);
+                --light-red-gradient: linear-gradient(to bottom right, #8b5154 0%, #c97c83 35%, #c97c83 65%, #dd99a4 100%);
+                --dark-red-gradient: linear-gradient(to bottom right, #351a21 0%, #70112c 35%, #70112c 65%, #a5112c 100%);
+            }
+            
+            #main-container {
+                max-width: 900px;
+                padding: 48px;
+                background-color: #18202b;
             }
             
             #board {
-                width: calc(8 * var(--size));
-                height: calc(8 * var(--size));
-                border-top: var(--border);
-                border-left: var(--border);
+                width: calc(8 * var(--size) + 2px);
+                height: calc(8 * var(--size) + 2px);
 
                 display: flex;
                 flex-flow: row wrap;
 
-                background-color: lightgrey;
+                background: var(--grid-gradient) 0 0/64px 64px, var(--light-grey-gradient) 0 0/512px 512px;
             }
 
             #piece {
                 display: flex;
-                flex-flow: row nowrap;
+                flex-flow: column nowrap;
+                align-items: flex-end;
 
-                width: 2000px;
+                width: min-content;
+
+                padding-bottom: 24px;
+            }
+
+            #piece #none, #piece img {
+                box-sizing: border-box;
+                width: var(--size);
+                height: var(--size);
+                border-radius: 2px;
             }
 
             #fenError {
                 color: red;
             }
 
+            .piece-row {
+                display: flex;
+                flex-flow: row nowrap;
+            }
+
             .cell {
                 box-sizing: border-box;
+                background-clip: padding-box;
                 width: var(--size);
                 height: var(--size);
                 border-bottom: var(--border);
                 border-right: var(--border);
 
-                background-color: #202020;
+                cursor: pointer;
+
+                background-color: #15151d;
                 background-position: center;
                 background-repeat: no-repeat;
                 background-size: 48px 48px;
+            }
 
+            .top {
+                height: calc(var(--size) + 2px);
+                border-top: var(--border);
+            }
+
+            .left {
+                width: calc(var(--size) + 2px);
+                border-left: var(--border);
             }
 
             .bottom {
                 border-top: var(--border);
-                height: calc(var(--size) + 1px);
-                margin-top: -1px;
+                height: calc(var(--size) + 2px);
+                margin-top: -2px;
             }
 
             .right {
                 border-left: var(--border);
-                width: calc(var(--size) + 1px);
-                margin-left: -1px;
+                width: calc(var(--size) + 2px);
+                margin-left: -2px;
+            }
+
+            .center {
+                background-color: transparent;
             }
 
             .pusher-6 {
@@ -78,7 +126,61 @@
             }
 
             .selected {
-                background-color: aqua;
+                border: 2px solid white;
+                padding: 5px;
+            }
+
+            .light-grey {
+                background-color: #b4c5da;
+                color: #15151d;
+            }
+
+            .dark-grey {
+                background-color: #5a6572;
+            }
+
+            .light-red {
+                background-color: #c97c83;
+                color: #15151d;
+            }
+
+            .dark-red {
+                background-color: #70112c;
+            }
+
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 100vw;
+                min-height: 100vh;
+                margin: 0;
+
+                background: #161e2a url('./img/horizon.jpg') center center fixed;
+            }
+
+            p, button, textarea, a, label, select, div, input {
+                font-family: "IBM Plex Mono", "MS Shell Dlg \\32", monospace;
+                color: white;
+            }
+
+            h1, h2, h3 {
+                font-family: "Zilla Slab Highlight", serif;
+                color: white;
+            }
+
+            textarea {
+                background-color: #121c2c;
+            }
+
+            button, select, input[type="text"] {
+                padding: 4px 8px;
+                background-color: #121c2c;
+            }
+
+            p {
+                max-width: 84ch;
+                word-wrap: break-word;
             }
         </style>
 
@@ -110,9 +212,11 @@
             function resetBoard() {
                 const cells = Array.from(document.querySelectorAll(".cell"));
 
-                Array.from(document.getElementById("piece").children).forEach(
+                Array.from(document.getElementById("piece").querySelectorAll("img")).forEach(
                     (element) => element.classList.remove("selected")
                 );
+
+                document.getElementById("piece").querySelector("#none").classList.add("selected");
 
                 myglobals.piece = "none";
                 cells.forEach(updateImage);
@@ -123,8 +227,9 @@
                 document.getElementById("color").addEventListener("change", (event) => {
                     event.stopPropagation();
                     const newColor = event.target.value;
+                    console.log(newColor)
 
-                    document.getElementById("board").style.backgroundColor = newColor;
+                    document.getElementById("board").style.background = `var(--grid-gradient) 0 0/64px 64px, ${newColor} 0 0/512px 512px`;
                 });
 
                 // Handle changes to the selected piece
@@ -133,7 +238,7 @@
 
                     myglobals.piece = event.target.id;
 
-                    Array.from(event.currentTarget.children).forEach(
+                    Array.from(event.currentTarget.querySelectorAll(["#none", "img"])).forEach(
                         (element) => element.classList.remove("selected")
                     );
                     event.target.classList.add("selected");
@@ -168,96 +273,109 @@
         </script>
     </head>
     <body>
-        <label for="color">Select Board Color (cosmetic)</label>
-        <select name="color" id="color">
-            <option value="lightgrey" selected>Light Grey</option>
-            <option value="darkgrey">Dark Grey</option>
-            <option value="lightcoral">Light Red</option>
-            <option value="darkred">Dark Red</option>
-        </select>
+        <div id="main-container">
+            <h1>New Lemons' D2 Queen's Gambit FEN &lt;-&gt; Board converter</h1>
+            <p>You might also like my <a href="./board-matcher.html" target="_blank">Queen's Gambit Board Matcher</a></p>
 
-        <div>
-            <button id="resetBoard">Reset Board</button>
-        </div>
+            <h2>Cosmetic Options</h2>
+            <label for="color">Select Board Colour (cosmetic)</label>
+            <select name="color" id="color">
+                <button><selectedcontent></selectedcontent></button>
 
-        <p>Select Piece</p>
-        <div id="piece">
-            <div id="none" class="image empty selected">None</div>
+                <option class="light-grey" value="var(--light-grey-gradient)">Light Grey</option>
+                <option class="dark-grey" value="var(--dark-grey-gradient)">Dark Grey</option>
+                <option class="light-red" value="var(--light-red-gradient)">Light Red</option>
+                <option class="dark-red" value="var(--dark-red-gradient)">Dark Red</option>
+            </select>
 
-            <img id="B" class="image" src="./img/wb.png" />
-            <img id="K" class="image" src="./img/wk.png" />
-            <img id="N" class="image" src="./img/wn.png" />
-            <img id="P" class="image" src="./img/wp.png" />
-            <img id="Q" class="image" src="./img/wq.png" />
-            <img id="R" class="image" src="./img/wr.png" />
+            <h2>Build Board</h2>
 
-            <img id="b" class="image" src="./img/bb.png" />
-            <img id="k" class="image" src="./img/bk.png" />
-            <img id="n" class="image" src="./img/bn.png" />
-            <img id="p" class="image" src="./img/bp.png" />
-            <img id="q" class="image" src="./img/bq.png" />
-            <img id="r" class="image" src="./img/br.png" />
-        </div>
+            <div id="piece">
+                <div class="piece-row">
+                    <div id="none" class="image empty selected">None</div>
 
-        <div id="board">
-            <div id="a8" class="cell"></div>
-            <div id="b8" class="cell"></div>
-            <div id="c8" class="cell"></div>
-            <div id="d8" class="cell"></div>
-            <div id="e8" class="cell"></div>
-            <div id="f8" class="cell"></div>
-            <div id="g8" class="cell"></div>
-            <div id="h8" class="cell"></div>
+                    <img id="B" class="image" src="./img/wb.png" />
+                    <img id="K" class="image" src="./img/wk.png" />
+                    <img id="N" class="image" src="./img/wn.png" />
+                    <img id="P" class="image" src="./img/wp.png" />
+                    <img id="Q" class="image" src="./img/wq.png" />
+                    <img id="R" class="image" src="./img/wr.png" />
+                </div>
+                <div class="piece-row">
+                    <img id="b" class="image" src="./img/bb.png" />
+                    <img id="k" class="image" src="./img/bk.png" />
+                    <img id="n" class="image" src="./img/bn.png" />
+                    <img id="p" class="image" src="./img/bp.png" />
+                    <img id="q" class="image" src="./img/bq.png" />
+                    <img id="r" class="image" src="./img/br.png" />
+                </div>
+            </div>
 
-            <div id="a7" class="cell"></div>
-            <div class="pusher-6"></div>
-            <div id="h7" class="cell right"></div>
+            <div id="board">
+                <div id="a8" class="cell top left"></div>
+                <div id="b8" class="cell top"></div>
+                <div id="c8" class="cell top"></div>
+                <div id="d8" class="cell top"></div>
+                <div id="e8" class="cell top"></div>
+                <div id="f8" class="cell top"></div>
+                <div id="g8" class="cell top"></div>
+                <div id="h8" class="cell top"></div>
 
-            <div id="a6" class="cell"></div>
-            <div class="pusher-6"></div>
-            <div id="h6" class="cell right"></div>
+                <div id="a7" class="cell left"></div>
+                <div class="pusher-6"></div>
+                <div id="h7" class="cell right"></div>
 
-            <div id="a5" class="cell"></div>
-            <div class="pusher-2"></div>
-            <div id="d5" class="center cell bottom right"></div>
-            <div id="e5" class="center cell bottom"></div>
-            <div class="pusher-2"></div>
-            <div id="h5" class="cell right"></div>
+                <div id="a6" class="cell left"></div>
+                <div class="pusher-6"></div>
+                <div id="h6" class="cell right"></div>
 
-            <div id="a4" class="cell"></div>
-            <div class="pusher-2"></div>
-            <div id="d4" class="center cell right"></div>
-            <div id="e4" class="center cell"></div>
-            <div class="pusher-2"></div>
-            <div id="h4" class="cell right"></div>
+                <div id="a5" class="cell left"></div>
+                <div class="pusher-2"></div>
+                <div id="d5" class="center cell bottom right"></div>
+                <div id="e5" class="center cell bottom"></div>
+                <div class="pusher-2"></div>
+                <div id="h5" class="cell right"></div>
 
-            <div id="a3" class="cell"></div>
-            <div class="pusher-6"></div>
-            <div id="h3" class="cell right"></div>
+                <div id="a4" class="cell left"></div>
+                <div class="pusher-2"></div>
+                <div id="d4" class="center cell right"></div>
+                <div id="e4" class="center cell"></div>
+                <div class="pusher-2"></div>
+                <div id="h4" class="cell right"></div>
 
-            <div id="a2" class="cell"></div>
-            <div class="pusher-6"></div>
-            <div id="h2" class="cell right"></div>
+                <div id="a3" class="cell left"></div>
+                <div class="pusher-6"></div>
+                <div id="h3" class="cell right"></div>
 
-            <div id="a1" class="cell"></div>
-            <div id="b1" class="cell bottom"></div>
-            <div id="c1" class="cell bottom"></div>
-            <div id="d1" class="cell bottom"></div>
-            <div id="e1" class="cell bottom"></div>
-            <div id="f1" class="cell bottom"></div>
-            <div id="g1" class="cell bottom"></div>
-            <div id="h1" class="cell"></div>
-        </div>
+                <div id="a2" class="cell left"></div>
+                <div class="pusher-6"></div>
+                <div id="h2" class="cell right"></div>
 
-        <p>
-            <b>Resulting FEN:</b> <b id="fen">8/8/8/8/8/8/8/8</b>
-        </p>
+                <div id="a1" class="cell left"></div>
+                <div id="b1" class="cell bottom"></div>
+                <div id="c1" class="cell bottom"></div>
+                <div id="d1" class="cell bottom"></div>
+                <div id="e1" class="cell bottom"></div>
+                <div id="f1" class="cell bottom"></div>
+                <div id="g1" class="cell bottom"></div>
+                <div id="h1" class="cell"></div>
+            </div>
 
-        <div>
-            <p>Parse a FEN to board</p>
-            <input id="fenInput" name="fenInput" type="text" placeholder="Paste a FEN..." />
-            <button id="fenSubmit">Parse</button>
-            <div id="fenError"></div>
+            <p>
+                <b>Resulting FEN:</b> <b id="fen">8/8/8/8/8/8/8/8</b>
+            </p>
+
+            <div>
+                <button id="resetBoard">Reset Board</button>
+            </div>
+
+            <div>
+                <h2>Fill board from FEN</h2>
+                <input id="fenInput" name="fenInput" type="text" placeholder="Paste a FEN..." />
+                <button id="fenSubmit">Parse</button>
+                <div id="fenError"></div>
+            </div>
+
         </div>
         <script>
             window.onload = init();
