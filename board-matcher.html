@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab+Highlight:wght@400;700&display=swap" rel="stylesheet">
+
+        <style>
+            :root {
+                --border: 1px solid dimgrey;
+                --size: 64px;
+            }
+
+            #main-container {
+                padding: 48px;
+                background-color: #18202b;
+            }
+            
+            #board-data {
+                width: 800px;
+                min-height: 100px;
+                border: 1px solid steelblue;
+            }
+
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 100vw;
+                min-height: 100vh;
+
+                background: #161e2a url('./img/horizon.jpg') center center fixed;
+            }
+
+            p, button, textarea, a {
+                font-family: "IBM Plex Mono", "MS Shell Dlg \\32", monospace;
+                color: white;
+            }
+
+            h1, h2, h3 {
+                font-family: "Zilla Slab Highlight", serif;
+                color: white;
+            }
+
+            textarea {
+                background-color: #121c2c;
+            }
+
+            button {
+                padding: 4px 8px;
+                background-color: #121c2c;
+            }
+        </style>
+
+        <script src="./fen.js"></script>
+        <script src="./tjlInterop.js"></script>
+        <script src="./boardBuilder.js"></script>
+
+        <script>
+            let myglobals = makeEmptyGlobals();
+
+            function makeEmptyGlobals() {
+                return {
+                    rawData: null,
+                    intermediateData: null,
+                    indices: {
+                        sequence: {},
+                        top: {},
+                        bottom: {},
+                        left: {},
+                        right: {},
+                    }
+                };
+            }
+
+            function reset() {
+                myglobals = makeEmptyGlobals();
+
+                document.getElementById("board-data").value = "";
+                setIdle();
+            }
+
+            function setWorking() {
+                const element = document.getElementById("status");
+                element.style.color = "gold";
+                element.textContent = "Status: WORKING";
+            }
+
+            function setIdle() {
+                const element = document.getElementById("status");
+                element.style.color = "white";
+                element.textContent = "Status: IDLE";
+            }
+
+            async function fetchData(confidence) {
+                setWorking();
+                return fetch(`https://tjl.co/queens-gambit-arg/${confidence}.json`).then(
+                    req => req.json()
+                ).then(
+                    data => {myglobals.rawData = data; setIdle()}
+                );
+            }
+
+            function makeIntermediate() {
+                if (!myglobals.rawData) {
+                    return;
+                }
+
+                setWorking()
+
+                const tjlIds = Object.keys(myglobals.rawData);
+
+                const intermediateData = {}
+                for (let id of tjlIds) {
+                    const {symbols, ...rest} = myglobals.rawData[id];
+                    
+                    const fenSymbols = tjlSymbolsToFenSymbols(symbols)
+
+                    const {left, right, top, bottom} = parseSides(fenSymbols);
+
+                    intermediateData[id] = {fenSymbols, left, right, top, bottom, ...rest};
+                }
+
+                myglobals.intermediateData = intermediateData;
+
+                setIdle();
+            }
+
+            function buildIndices() {
+                if (!myglobals.intermediateData) {
+                    return;
+                }
+
+                setWorking();
+                const tjlIds = Object.keys(myglobals.intermediateData);
+
+                for (const id of tjlIds) {
+                    const {sequence, top, left, bottom, right} = myglobals.intermediateData[id];
+
+                    if (myglobals.indices.sequence[sequence]) {
+                        myglobals.indices.sequence[sequence].push(id);
+                    } else {
+                        myglobals.indices.sequence[sequence] = [id];
+                    }
+
+                    if (myglobals.indices.top[top]) {
+                        myglobals.indices.top[top].push(id);
+                    } else {
+                        myglobals.indices.top[top] = [id];
+                    }
+
+                    if (myglobals.indices.bottom[bottom]) {
+                        myglobals.indices.bottom[bottom].push(id);
+                    } else {
+                        myglobals.indices.bottom[bottom] = [id];
+                    }
+
+                    if (myglobals.indices.left[left]) {
+                        myglobals.indices.left[left].push(id);
+                    } else {
+                        myglobals.indices.left[left] = [id];
+                    }
+                    
+                    if (myglobals.indices.right[right]) {
+                        myglobals.indices.right[right].push(id);
+                    } else {
+                        myglobals.indices.right[right] = [id];
+                    }
+                }
+                setIdle();
+            }
+
+            function findHighestValidated(tjlIds) {
+                let currMax = Number.NEGATIVE_INFINITY;
+                let currId = null;
+
+                for (const id of tjlIds) {
+                    const board = myglobals.intermediateData[id];
+
+                    const score = (board.verified ?? 0) * 3 + (board.communityVerified ?? 0) * 1 + (+(board.aion === "correct") * 1000);
+                    if (score > currMax) {
+                        currMax = score;
+                        currId = id;
+                    }
+                }
+
+                return currId;
+            }
+
+            function pruneData() {
+                setWorking();
+                const sequences = Object.keys(myglobals.indices.sequence)
+
+                if (sequences.length === 0) return;
+
+                for (const sequence of sequences) {
+                    const submissionIds = myglobals.indices.sequence[sequence];
+
+                    if (submissionIds.length <= 1) continue;
+
+                    const bestSubmissionId = findHighestValidated(submissionIds)
+
+                    submissionIds.forEach(subId => {
+                        if (subId === bestSubmissionId) return;
+                        const {top, right, left, bottom} = myglobals.intermediateData[subId];
+
+                        myglobals.indices.top[top] = myglobals.indices.top[top].filter(id => id !== subId);
+                        myglobals.indices.bottom[bottom] = myglobals.indices.bottom[bottom].filter(id => id !== subId);
+                        myglobals.indices.left[left] = myglobals.indices.left[left].filter(id => id !== subId);
+                        myglobals.indices.right[right] = myglobals.indices.right[right].filter(id => id !== subId);
+                        
+                        delete myglobals.intermediateData[subId];
+                    });
+
+                    myglobals.indices.sequence[sequence] = [bestSubmissionId];
+                }
+
+                setIdle();
+            }
+
+            function buildAndPresentBoard() {
+                setWorking();
+                setTimeout(() => {
+                    const board = buildBoard();
+
+                    document.getElementById("board-data").value = JSON.stringify(board, null, 2);
+                    setIdle();
+                }, 50);   
+            }
+
+            function matchFromRawData() {
+                setWorking();
+
+                setTimeout(() => {
+                    makeIntermediate();
+                    buildIndices();
+                    pruneData();
+                    buildAndPresentBoard();
+                    
+                    setIdle();
+                }, 50);
+            }
+
+            function init() {
+                // Data loaders for data from TJL
+                ["data-best", "data-verified", "data"].forEach(dataset => {
+                    document.getElementById(dataset).addEventListener("click", (event) => {
+                        event.stopPropagation();
+                        fetchData(dataset);
+                    });
+                })
+
+                // Make intermediate data
+                document.getElementById("make-intermediate").addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    makeIntermediate();
+                });
+
+                // Build indices from intermediate data
+                document.getElementById("build-indices").addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    buildIndices();
+                });
+
+                // Prune data and indices
+                document.getElementById("prune-data").addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    pruneData();
+                });
+
+                // Build the board
+                document.getElementById("build-board").addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    buildAndPresentBoard();
+                });
+
+                // Do it all in one
+                document.getElementById("build-board-from-raw").addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    matchFromRawData();
+                });
+
+                // Reset state
+                document.getElementById("reset-state").addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    reset();
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <div id="main-container">
+            <h1>D2 Queen's Gambit Board Matcher</h1>
+            <h2 id="status">Status: IDLE</h2>
+            <h2>Load Data</h2>
+            <div>
+                <button id="data-best">Best Data</button>
+                <button id="data-verified">Verified Data</button>
+                <button id="data">All Data</button>
+                <button id="reset-state">RESET FULL STATE</button>
+            </div>
+
+            <h2>Perform Full Match</h2>
+            <div>
+                <button id="build-board-from-raw">Build board from loaded data</button>
+            </div>
+
+            <h3>... or perform the steps manually (probably no need unless you're debugging this tool)</h3>
+            <div>
+                <button id="make-intermediate">Make Intermediate Data</button>
+                <button id="build-indices">Build Indices</button>
+                <button id="prune-data">Prune Data (Best dataset is pre-pruned)</button>
+                <button id="build-board">Build Board</button>
+            </div>
+
+            <h2>Board Data</h2>
+            <p>You can paste the result at <a href="https://tjl.co/queens-gambit-arg/self-service-matches.php">TJ's Self-Service Visualiser</a> to see the board laid out.</p>
+            <div>
+                <textarea id="board-data"></textarea>
+            </div>
+        </div>
+        
+        <script>
+            window.onload = init();
+        </script>
+    </body>
+</html>

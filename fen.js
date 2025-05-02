@@ -83,3 +83,47 @@ function parseFen() {
 
     makeFen()
 }
+
+function makeFenLine(symbolLine) {
+    let line = "";
+    let emptyNum = 0;
+    for (const symChar of symbolLine) {
+        if (!symChar) {
+            emptyNum++;
+            return;
+        }
+
+        if (emptyNum) {
+            line += emptyNum.toString();
+            emptyNum = 0;
+        }
+
+        line += symChar;
+    }
+
+    if (emptyNum !== 0) {
+        line += emptyNum.toString();
+    }
+
+    return line;
+}
+
+function getColumn(symbols, colIndex) {
+    return symbols.map(symbolLine => symbolLine[colIndex]);
+}
+
+function parseSides(symbols) {
+    if (!symbols) return {
+        top: "8",
+        bottom: "8",
+        left: "8",
+        right: "8",
+    }
+
+    return {
+        top: makeFenLine(symbols[0]),
+        bottom: makeFenLine(symbols[symbols.length - 1]),
+        left: makeFenLine(getColumn(symbols, 0)),
+        right: makeFenLine(getColumn(symbols, symbols.length - 1)),
+    }
+}
