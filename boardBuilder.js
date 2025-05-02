@@ -140,6 +140,7 @@ function buildBoard() {
         const unusedFreqs = cellIds.map(id => myglobals.intermediateData[id].sequence);
         console.log("Unplaced frequencies:");
         console.log(JSON.stringify(unusedFreqs));
+        document.getElementById("unused-freqs").textContent = "[" + unusedFreqs.join(", ") + "]";
     }
 
     const allFreqs = Object.keys(myglobals.indices.sequence).map(e => parseInt(e));
@@ -149,6 +150,7 @@ function buildBoard() {
     }
     console.log("Frequencies missing from data:");
     console.log(JSON.stringify(missingFreqs));
+    document.getElementById("missing-freqs").textContent = "[" + missingFreqs.join(", ") + "]";
 
     const qrBoard = board.slice(24, 40).map(row => row.slice(24, 40));
 

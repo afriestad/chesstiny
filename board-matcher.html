@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&display=swap" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab+Highlight:wght@400;700&display=swap" rel="stylesheet">
+        <link href="https://fontlay.com/css2?family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+        <link href="https://fontlay.com/css2?family=Zilla+Slab+Highlight:wght@400;700&display=swap" rel="stylesheet">
 
         <style>
             :root {
@@ -49,6 +49,11 @@
                 padding: 4px 8px;
                 background-color: #121c2c;
             }
+
+            p {
+                max-width: 84ch;
+                word-wrap: break-word;
+            }
         </style>
 
         <script src="./fen.js"></script>
@@ -76,6 +81,8 @@
                 myglobals = makeEmptyGlobals();
 
                 document.getElementById("board-data").value = "";
+                document.getElementById("unused-freqs").textContent = "";
+                document.getElementById("missing-freqs").textContent = "";
                 setIdle();
             }
 
@@ -290,6 +297,7 @@
     <body>
         <div id="main-container">
             <h1>New Lemons' D2 Queen's Gambit Board Matcher</h1>
+            <p>You might also like my <a href="./index.html" target="_blank">Queen's Gambit Board &lt;-&gt; FEN Converter</a></p>
             <h2 id="status">Status: IDLE</h2>
             <h2>Load Data</h2>
             <div>
@@ -314,6 +322,9 @@
 
             <h2>Board Data</h2>
             <p>You can paste the result at <a href="https://tjl.co/queens-gambit-arg/self-service-matches.php" target="_blank">TJ's Self-Service Visualiser</a> to see the board laid out.</p>
+            <p>Present but unused frequencies: <span id="unused-freqs"></span></p>
+            <p>Frequencies missing from dataset:<span id="missing-freqs"></span></p>
+            <p>The most highly verified submission for each unused frequency is listed below the board in the response, so you can click them from the visualiser.</p>
             <div>
                 <textarea id="board-data"></textarea>
             </div>
