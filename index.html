@@ -307,6 +307,15 @@
                     resetBoard();
                     updateNotations();
                 });
+
+                // Copy notation to clipboard
+                ["fen", "lefen", "leon"].forEach(notationType => {
+                    document.getElementById(`copy-${notationType}`).addEventListener("click", event => {
+                        const notation = document.getElementById(notationType).textContent;
+
+                        navigator.clipboard.writeText(notation);
+                    });
+                });
             }
         </script>
     </head>
@@ -447,7 +456,7 @@
             </div>
 
             <p>
-                <b>Resulting FEN:</b> <b id="fen">8/8/8/8/8/8/8/8</b>
+                <b>Resulting FEN:</b> <b id="fen">8/8/8/8/8/8/8/8</b> <button id="copy-fen">Copy</button>
             </p>
 
             <h2>ARG-Specific Options</h2>
@@ -490,11 +499,11 @@
             </div>
 
             <p>
-                Resulting LEFEN: <span id="lefen">8/8/8/8/8/8/8/8/G/-1</span>
+                Resulting LEFEN: <span id="lefen">8/8/8/8/8/8/8/8/G/-1</span> <button id="copy-lefen">Copy</button>
             </p>
 
             <p>
-                Resulting LEON: <span id="leon">8/8/8/8/1/G/-1</span>
+                Resulting LEON: <span id="leon">8/8/8/8/1/G/-1</span> <button id="copy-leon">Copy</button>
             </p>
 
         </div>
