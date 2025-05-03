@@ -5,7 +5,7 @@
         <link href="https://fontlay.com/css2?family=Zilla+Slab+Highlight:wght@400;700&display=swap" rel="stylesheet">
 
         <style>
-            #main-container {
+            #main-container, #qr-container {
                 padding: 48px;
                 background-color: #18202b;
             }
@@ -16,6 +16,23 @@
                 border: 1px solid steelblue;
             }
 
+            #qr-header {
+                margin: 0;
+            }
+
+            #extract-qr {
+                margin: 20px 0;
+            }
+
+            #qr-board {
+                width: calc(4 * 16 * 4px);
+                height: calc(4 * 16 * 4px);
+                border: 1px solid white;
+
+                display: flex;
+                flex-flow: row wrap;
+            }
+
             body {
                 display: flex;
                 justify-content: center;
@@ -23,6 +40,8 @@
                 width: 100vw;
                 min-height: 100vh;
                 margin: 0;
+
+                gap: 92px;
 
                 background: #161e2a url('./img/horizon.jpg') center center fixed;
             }
@@ -69,7 +88,8 @@
                         bottom: {},
                         left: {},
                         right: {},
-                    }
+                    },
+                    solution: null,
                 };
             }
 
@@ -224,6 +244,7 @@
                 setWorking();
                 setTimeout(() => {
                     const board = buildBoard();
+                    myglobals.solution = board;
 
                     document.getElementById("board-data").value = JSON.stringify(board, null, 2);
                     setIdle();
@@ -241,6 +262,65 @@
                     
                     setIdle();
                 }, 50);
+            }
+
+            function getColorForBit(qrBit) {
+                switch (qrBit) {
+                    case 1:
+                        return "black";
+                    case 0:
+                        return "white";
+                    default:
+                        return "transparent";
+                }
+            }
+
+            function drawQrFromSolution() {
+                if (!myglobals.solution) {
+                    return;
+                }
+
+                setWorking();
+
+                setTimeout(() => {
+                    const qrBoardPieces = myglobals.solution[1];
+
+                    const qrBits = Array.from(Array(64)).map(e => Array(64).fill(null));
+
+                    qrBoardPieces.forEach((row, outerRowIndex) => {
+                        row.forEach((tjlId, outerColIndex) => {
+                            const data = myglobals.intermediateData[tjlId];
+
+                            if (!data.hasQR) {
+                                return;
+                            }
+
+                            for (let innerRowIndex = 0; innerRowIndex < 4; innerRowIndex++) {
+                                for (let innerColIndex = 0; innerColIndex < 4; innerColIndex++) {
+                                    const globalRowIndex = 4 * outerRowIndex + innerRowIndex;
+                                    const globalColIndex = 4 * outerColIndex + innerColIndex;
+
+                                    qrBits[globalRowIndex][globalColIndex] = data.qrData?.[innerRowIndex][innerColIndex] ?? null
+                                }
+                            }
+                        });
+                    });
+
+                    const qrBoard = document.getElementById("qr-board");
+                    qrBoard.textContent = "";
+
+                    qrBits.forEach(qrBitRow => {
+                        qrBitRow.forEach(qrBit => {
+                            const bitDiv = document.createElement("div");
+                            bitDiv.style.width = "4px";
+                            bitDiv.style.height = "4px";
+                            bitDiv.style.backgroundColor = getColorForBit(qrBit);
+                            qrBoard.appendChild(bitDiv)
+                        });
+                    });
+
+                    setIdle();
+                }, 50)
             }
 
             function init() {
@@ -281,6 +361,12 @@
                     event.stopPropagation();
                     matchFromRawData();
                 });
+
+                // Extract the QR data from solution
+                document.getElementById("extract-qr").addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    drawQrFromSolution();
+                })
 
                 // Reset state
                 document.getElementById("reset-state").addEventListener("click", (event) => {
@@ -326,6 +412,12 @@
             <div>
                 <textarea id="board-data"></textarea>
             </div>
+        </div>
+
+        <div id="qr-container">
+            <h2 id="qr-header">QR from Solution</h2>
+            <button id="extract-qr">Extract QR from Board</button>
+            <div id="qr-board"></div>
         </div>
         
         <script>
