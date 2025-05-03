@@ -20,7 +20,7 @@ I made this mostly for myself in the finishing validation and 100% board-buildin
 
 The format of the background colour is a single letter. I took inspiration from the white pieces being uppercase and black pieces lowercase, and encoded them with `G` (Light Grey), `g` (Dark Grey), `R` (Light Red) and `r` (Dark Red).
 
-For the QR code snippet, since it's conveniently a 4x4 square of binary data, I decided to encode it as four little-endian hexadecimal digits, counting white as 1 and black as 0. That makes a full white row (`1111`) into `f`, `0111` into `e`, `1011` into `d` and so on until a full black row is `0000`/`0`.
+For the QR code snippet, since it's conveniently a 4x4 square of binary data, I decided to encode it as four little-endian hexadecimal digits, counting white as 1 and black as 0. That makes a full white row (`1111`) into `f`, `0111` into `e`, `1011` into `d` and so on until a full black row is `0000`/`0`. I encode "no QR" as `-1`.
 
 With these additions, I can encode a full ARG board. For instance, the board for frequency 2854 would be encoded `pkpNbKPq/B6Q/k6b/p2PP2r/N2PP2P/b6q/K6B/pbNPKBnR/r/fc15` in LEFEN. Test it out in [my notation to board conversion tool!](https://afriestad.github.io/chesstiny/index.html)
 
