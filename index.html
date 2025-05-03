@@ -4,212 +4,220 @@
         <link href="https://fontlay.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
         <link href="https://fontlay.com/css2?family=Zilla+Slab+Highlight:wght@400;700&display=swap" rel="stylesheet">
 
-        <style>
-            :root {
-                --border-width: 2px;
-                --border: var(--border-width) solid transparent;
-                --size: 64px;
+        <link href="./index.css" rel="stylesheet">
 
-                --grid-gradient: conic-gradient(from 90deg at var(--border-width) var(--border-width), transparent 25%, #acb6c0 0);
-
-                --light-grey-gradient: linear-gradient(to bottom right, #a5b5ca 0%, #b4c5da 35%, #b4c5da 65%, #d5dde9 100%);
-                --dark-grey-gradient: linear-gradient(to bottom right, #384155 0%, #5a6572 35%, #5a6572 65%, #878f97 100%);
-                --light-red-gradient: linear-gradient(to bottom right, #8b5154 0%, #c97c83 35%, #c97c83 65%, #dd99a4 100%);
-                --dark-red-gradient: linear-gradient(to bottom right, #351a21 0%, #70112c 35%, #70112c 65%, #a5112c 100%);
-            }
-            
-            #main-container {
-                max-width: 900px;
-                padding: 48px;
-                background-color: #18202b;
-            }
-            
-            #board {
-                width: calc(8 * var(--size) + var(--border-width));
-                height: calc(8 * var(--size) + var(--border-width));
-
-                display: flex;
-                flex-flow: row wrap;
-
-                background: var(--grid-gradient) 0 0/64px 64px, var(--light-grey-gradient) 0 0/512px 512px;
-            }
-
-            #piece {
-                display: flex;
-                flex-flow: column nowrap;
-                align-items: flex-end;
-
-                width: min-content;
-
-                padding-bottom: 24px;
-            }
-
-            #piece #none, #piece img {
-                box-sizing: border-box;
-                width: var(--size);
-                height: var(--size);
-                border-radius: 2px;
-            }
-
-            #fenError {
-                color: red;
-            }
-
-            .piece-row {
-                display: flex;
-                flex-flow: row nowrap;
-            }
-
-            .cell {
-                box-sizing: border-box;
-                background-clip: padding-box;
-                width: var(--size);
-                height: var(--size);
-                border-bottom: var(--border);
-                border-right: var(--border);
-
-                cursor: pointer;
-
-                background-color: #15151d;
-                background-position: center;
-                background-repeat: no-repeat;
-                background-size: 48px 48px;
-            }
-
-            .top {
-                height: calc(var(--size) + var(--border-width));
-                border-top: var(--border);
-            }
-
-            .left {
-                width: calc(var(--size) + var(--border-width));
-                border-left: var(--border);
-            }
-
-            .bottom {
-                border-top: var(--border);
-                height: calc(var(--size) + var(--border-width));
-                margin-top: -2px;
-            }
-
-            .right {
-                border-left: var(--border);
-                width: calc(var(--size) + var(--border-width));
-                margin-left: -2px;
-            }
-
-            .center {
-                background-color: transparent;
-            }
-
-            .pusher-6 {
-                width: calc(6 * var(--size));
-            }
-
-            .pusher-2 {
-                width: calc(2 * var(--size));
-            }
-
-            .image {
-                width: 48px;
-                height: 48px;
-                padding: 7px;
-                text-align: center;
-            }
-
-            .empty {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .selected {
-                border: var(--border-width) solid white;
-                padding: 5px;
-            }
-
-            .light-grey {
-                background-color: #b4c5da;
-                color: #15151d;
-            }
-
-            .dark-grey {
-                background-color: #5a6572;
-            }
-
-            .light-red {
-                background-color: #c97c83;
-                color: #15151d;
-            }
-
-            .dark-red {
-                background-color: #70112c;
-            }
-
-            body {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                width: 100vw;
-                min-height: 100vh;
-                margin: 0;
-
-                background: #161e2a url('./img/horizon.jpg') center center fixed;
-            }
-
-            p, button, textarea, a, label, select, div, input {
-                font-family: "IBM Plex Mono", "MS Shell Dlg \\32", monospace;
-                color: white;
-            }
-
-            h1, h2, h3 {
-                font-family: "Zilla Slab Highlight", serif;
-                color: white;
-            }
-
-            textarea {
-                background-color: #121c2c;
-            }
-
-            button, select, input[type="text"] {
-                padding: 4px 8px;
-                background-color: #121c2c;
-            }
-
-            p {
-                max-width: 80ch;
-                word-wrap: break-word;
-            }
-        </style>
-
-        <script src="./fen.js"></script>
+        <script src="./notations.js"></script>
 
         <script>
-            const myglobals = {piece: "none"};
+            const myglobals = {
+                piece: "none",
+                COL_NAMES: ["a", "b", "c", "d", "e", "f", "g", "h"]
+            };
 
-            function nameFor(name) {
-                if (name === name.toUpperCase()) {
-                    return `w${name.toLowerCase()}`;
+            function imageNameFor(fenChar) {
+                if (fenChar === fenChar.toUpperCase()) {
+                    return `w${fenChar.toLowerCase()}`;
                 }
-                if (name === name.toLowerCase()) {
-                    return `b${name}`;
+                if (fenChar === fenChar.toLowerCase()) {
+                    return `b${fenChar}`;
                 }
             }
 
             function updateImage(element) {
-                if (myglobals.piece === "none") {
+                const selectedPiece = document.querySelector("#piece .selected").id;
+                if (selectedPiece === "none") {
                     element.removeAttribute("data-piece");
                     element.style.backgroundImage = "";
                     return;
                 }
 
-                element.style.backgroundImage = `url('./img/${nameFor(myglobals.piece)}.png')`;
-                element.setAttribute("data-piece", myglobals.piece);
+                element.style.backgroundImage = `url('./img/${imageNameFor(selectedPiece)}.png')`;
+                element.setAttribute("data-piece", selectedPiece);
+            }
+
+            function writePieceToCell(cell, fenChar) {
+                console.log(fenChar);
+                if (!fenChar) {
+                    cell.removeAttribute("data-piece");
+                    cell.style.backgroundImage = "";
+                    return;
+                } 
+
+                cell.style.backgroundImage = `url('./img/${imageNameFor(fenChar)}.png')`;
+                cell.setAttribute("data-piece", fenChar);
+            }
+
+            function colourToShorthand(colour) {
+                switch (colour) {
+                    case "var(--dark-red-gradient)":
+                        return "r";
+                    case "var(--light-red-gradient)":
+                        return "R";
+                    case "var(--dark-grey-gradient)":
+                        return "g";  
+                    case "var(--light-grey-gradient)":
+                    default:
+                        return "G";
+                }
+            }
+
+            function shorthandToColour(shorthand) {
+                switch (shorthand) {
+                    case "r": 
+                        return "var(--dark-red-gradient)";
+                    case "R":
+                        return "var(--light-red-gradient)";
+                    case "g":
+                        return "var(--dark-grey-gradient)";
+                    case "G":
+                    default:
+                        return "var(--light-grey-gradient)";
+                }
+            }
+
+            function getSelectedColourShorthand() {
+                const colourSelect = document.getElementById("color");
+
+                return colourToShorthand(colourSelect.value);
+            }
+
+            function writeBoardFromFenArray(fenArray) {
+                fenArray.forEach((fenRow, y) => {
+                    fenRow.forEach((fenChar, x) => {
+                        const rowNumber = 8 - y;
+                        const colName = myglobals.COL_NAMES[x];
+                        const cell = document.getElementById("board").querySelector(`#${colName}${rowNumber}`);
+
+                        if (!cell) return;
+
+                        writePieceToCell(cell, fenChar);
+                    })
+                })
+            }
+
+            function writeColourFromShorthand(shorthand) {
+                const select = document.getElementById("color");
+
+                select.value = shorthandToColour(shorthand);
+                select.dispatchEvent(new Event("change"));
+            }
+
+            function writeQRBoardFromString(qrString) {
+                const qrBinary = parseInt(qrString, 16).toString(2).split("");
+                qrBinary.forEach((qrBit, i) => {
+                    const col = Math.floor(i / 4);
+                    const row = 3 - (i % 4);
+
+                    const inputCell = document.querySelector(`#i${row}${col}`);
+
+                    if ((qrBit === "1") === inputCell.classList.contains("black")) {
+                        inputCell.click();
+                    }
+                })
+            }
+
+            function writeQRFromString(qrString) {
+                const checkbox = document.getElementById("has-qr")
+                if (qrString === "-1" && checkbox.checked) {
+                    // Wipe board then uncheck
+                    writeQRBoardFromString("0000");
+                    checkbox.checked = false;
+                    checkbox.dispatchEvent(new Event("change"));
+                } 
+                else if (qrString !== "-1") {
+                    if (!checkbox.checked) {
+                        // Check box before filling board
+                        checkbox.checked = true;
+                        checkbox.dispatchEvent(new Event("change"));
+                    } 
+                    
+                    setTimeout(() => writeQRBoardFromString(qrString), 50);
+                }
+            }
+
+            function readFenInput() {
+                const fenInput = document.getElementById("fen-input");
+                const fenError = document.getElementById("fen-error");
+
+                const fenString = fenInput.value;
+
+                if (!isFen(fenString)) {
+                    fenError.textContent = `${fenString} is not a valid FEN`;
+                    fenInput.value = "";
+
+                    return;
+                }
+
+                fenError.textContent = "";
+                fenInput.value = "";
+
+                const fenArray = makeArrayFromFen(fenString);
+
+                writeBoardFromFenArray(fenArray);
+            }
+
+            function readLefenInput() {
+                const lefenInput = document.getElementById("lefen-input");
+                const lefenError = document.getElementById("lefen-error");
+
+                const lefenString = lefenInput.value;
+
+                if (!isLefen(lefenString)) {
+                    lefenError.textContent = `${lefenString} is not a valid LEFEN`;
+                    lefenInput.value = "";
+
+                    return;
+                }
+
+                lefenError.textContent = "";
+                lefenInput.value = "";
+
+                const {fenArray, colour, qrString} = parseLefen(lefenString);
+
+                writeBoardFromFenArray(fenArray);
+                writeColourFromShorthand(colour);
+                writeQRFromString(qrString);
+            }
+
+            function readLeonInput() {
+                const leonInput = document.getElementById("leon-input");
+                const leonError = document.getElementById("leon-error");
+
+                const leonString = leonInput.value;
+
+                if (!isLeon(leonString)) {
+                    leonError.textContent = `${leonString} is not a valid LEON`;
+                    leonInput.value = "";
+
+                    return;
+                }
+
+                leonError.textContent = "";
+                leonInput.value = "";
+
+                const {fenArray, colour, qrString} = parseLeon(leonString);
+
+                writeBoardFromFenArray(fenArray);
+                writeColourFromShorthand(colour);
+                writeQRFromString(qrString);
+            }
+
+            function updateNotations() {
+                const boardCells = Array.from(document.querySelectorAll(".cell"))
+                const fenArray = readFenArrayFromCells(boardCells);
+
+                const hasQr = document.getElementById("has-qr").checked;
+                const qrCells = Array.from(document.getElementById("qr-board").querySelectorAll(".qr-cell"));
+                const qrString = hasQr ? readQRFromCells(qrCells) : "-1";
+
+                const colour = getSelectedColourShorthand();
+                
+                document.getElementById("fen").textContent = makeFenFromArray(fenArray);
+                document.getElementById("lefen").textContent = makeLefenFromArray(fenArray, colour, qrString);
+                document.getElementById("leon").textContent = makeLeonFromArray(fenArray, colour, qrString);
             }
 
             function resetBoard() {
-                const cells = Array.from(document.querySelectorAll(".cell"));
-
                 Array.from(document.getElementById("piece").querySelectorAll("img")).forEach(
                     (element) => element.classList.remove("selected")
                 );
@@ -217,6 +225,7 @@
                 document.getElementById("piece").querySelector("#none").classList.add("selected");
 
                 myglobals.piece = "none";
+                const cells = Array.from(document.querySelectorAll(".cell"));
                 cells.forEach(updateImage);
             }
 
@@ -225,10 +234,35 @@
                 document.getElementById("color").addEventListener("change", (event) => {
                     event.stopPropagation();
                     const newColor = event.target.value;
-                    console.log(newColor)
 
                     document.getElementById("board").style.background = `var(--grid-gradient) 0 0/64px 64px, ${newColor} 0 0/512px 512px`;
+                    
+                    updateNotations();
                 });
+
+                document.getElementById("has-qr").addEventListener("change", (event) => {
+                    if (event.target.checked) {
+                        document.getElementById("qr-input").classList.add("visible");
+                        document.getElementById("qr-board").classList.add("visible");
+                    } else {
+                        document.getElementById("qr-input").classList.remove("visible");
+                        document.getElementById("qr-board").classList.remove("visible");
+                    }
+
+                    updateNotations();
+                })
+
+                // Handle changes to the QR input
+                document.getElementById("qr-input").addEventListener("click", (event) => {
+                    event.stopPropagation();
+
+                    const cellId = event.target.getAttribute("data-cell");
+                    
+                    event.target.classList.toggle("black");
+                    document.getElementById("qr-board").querySelector(`#b${cellId}`).classList.toggle("black");
+
+                    updateNotations();
+                })
 
                 // Handle changes to the selected piece
                 document.getElementById("piece").addEventListener("click", (event) => {
@@ -254,18 +288,33 @@
                         updateImage(target);
                     }
 
-                    makeFen();
+                    updateNotations();
                 });
 
-                document.getElementById("fenSubmit").addEventListener("click", event => {
+                // Draw board from submitted FEN
+                document.getElementById("fen-submit").addEventListener("click", event => {
                     event.stopPropagation();
-                    parseFen();
+                    readFenInput();
+                    updateNotations();
                 });
 
-                document.getElementById("resetBoard").addEventListener("click", event => {
+                document.getElementById("lefen-submit").addEventListener("click", event => {
+                    event.stopPropagation();
+                    readLefenInput();
+                    updateNotations();
+                });
+
+                document.getElementById("leon-submit").addEventListener("click", event => {
+                    event.stopPropagation();
+                    readLeonInput();
+                    updateNotations();
+                });
+
+                // Empty the board
+                document.getElementById("reset-board").addEventListener("click", event => {
                     event.stopPropagation();
                     resetBoard();
-                    makeFen();
+                    updateNotations();
                 });
             }
         </script>
@@ -275,18 +324,42 @@
             <h1>New Lemons' D2 Queen's Gambit Board &lt;-&gt; FEN converter</h1>
             <p>You might also like my <a href="./board-matcher.html" target="_blank">Queen's Gambit Grand Board Matcher</a></p>
 
-            <h2>Cosmetic Options</h2>
-            <label for="color">Select Board Colour (cosmetic)</label>
-            <select name="color" id="color">
-                <button><selectedcontent></selectedcontent></button>
+            <h2>Fill Board from Notation</h2>
 
-                <option class="light-grey" value="var(--light-grey-gradient)">Light Grey</option>
-                <option class="dark-grey" value="var(--dark-grey-gradient)">Dark Grey</option>
-                <option class="light-red" value="var(--light-red-gradient)">Light Red</option>
-                <option class="dark-red" value="var(--dark-red-gradient)">Dark Red</option>
-            </select>
+            <div id="input-fields">
+                <div>
+                    <label for="fen-input">FEN</label>
+                    <div>
+                        <input id="fen-input" name="fen-input" type="text" placeholder="Paste a FEN..." />
+                        <button id="fen-submit">Parse</button>
+                    </div>
+                    <div id="fen-error"></div>
+                </div>
+
+                <div>
+                    <label for="lefen-input">LEFEN</label>
+                    <div>
+                        <input id="lefen-input" name="lefen-input" type="text" placeholder="Paste a LEFEN..." />
+                        <button id="lefen-submit">Parse</button>
+                    </div>
+                    <div id="lefen-error"></div>
+                </div>
+
+                <div>
+                    <label for="leon-input">LEON</label>
+                    <div>
+                        <input id="leon-input" name="leon-input" type="text" placeholder="Paste a LEON..." />
+                        <button id="leon-submit">Parse</button>
+                    </div>
+                    <div id="leon-error"></div>
+                </div>
+            </div>
 
             <h2>Build Board</h2>
+
+            <div style="margin: -4px 0 32px;">
+                <button id="reset-board">Reset Board</button>
+            </div>
 
             <div id="piece">
                 <div class="piece-row">
@@ -310,6 +383,35 @@
             </div>
 
             <div id="board">
+                <div id="qr-board">
+                    <div id="b00" class="qr-cell"></div>
+                    <div id="b10" class="qr-cell"></div>
+                    <div id="b20" class="qr-cell"></div>
+                    <div id="b30" class="qr-cell"></div>
+                
+                    <div id="b01" class="qr-cell"></div>
+                    <div id="b11" class="qr-cell"></div>
+                    <div id="b21" class="qr-cell"></div>
+                    <div id="b31" class="qr-cell"></div>
+                
+                    <div id="b02" class="qr-cell"></div>
+                    <div id="b12" class="qr-cell"></div>
+                    <div id="b22" class="qr-cell"></div>
+                    <div id="b32" class="qr-cell"></div>
+                
+                    <div id="b03" class="qr-cell"></div>
+                    <div id="b13" class="qr-cell"></div>
+                    <div id="b23" class="qr-cell"></div>
+                    <div id="b33" class="qr-cell"></div>
+                </div>
+
+                <div id="center">
+                    <div id="d5" class="center cell bottom right"></div>
+                    <div id="e5" class="center cell bottom"></div>
+                    <div id="d4" class="center cell right"></div>
+                    <div id="e4" class="center cell"></div>
+                </div>
+
                 <div id="a8" class="cell top left"></div>
                 <div id="b8" class="cell top"></div>
                 <div id="c8" class="cell top"></div>
@@ -328,17 +430,11 @@
                 <div id="h6" class="cell right"></div>
 
                 <div id="a5" class="cell left"></div>
-                <div class="pusher-2"></div>
-                <div id="d5" class="center cell bottom right"></div>
-                <div id="e5" class="center cell bottom"></div>
-                <div class="pusher-2"></div>
+                <div class="pusher-6"></div>
                 <div id="h5" class="cell right"></div>
 
                 <div id="a4" class="cell left"></div>
-                <div class="pusher-2"></div>
-                <div id="d4" class="center cell right"></div>
-                <div id="e4" class="center cell"></div>
-                <div class="pusher-2"></div>
+                <div class="pusher-6"></div>
                 <div id="h4" class="cell right"></div>
 
                 <div id="a3" class="cell left"></div>
@@ -363,16 +459,52 @@
                 <b>Resulting FEN:</b> <b id="fen">8/8/8/8/8/8/8/8</b>
             </p>
 
+            <h2>ARG-Specific Options</h2>
+
             <div>
-                <button id="resetBoard">Reset Board</button>
+                <label for="color">Select Board Colour</label>
+                <select name="color" id="color" autocomplete="off">
+                    <option class="light-grey" value="var(--light-grey-gradient)">Light Grey</option>
+                    <option class="dark-grey" value="var(--dark-grey-gradient)">Dark Grey</option>
+                    <option class="light-red" value="var(--light-red-gradient)">Light Red</option>
+                    <option class="dark-red" value="var(--dark-red-gradient)">Dark Red</option>
+                </select>
             </div>
 
             <div>
-                <h2>Fill board from FEN</h2>
-                <input id="fenInput" name="fenInput" type="text" placeholder="Paste a FEN..." />
-                <button id="fenSubmit">Parse</button>
-                <div id="fenError"></div>
+                <label for="has-qr">Board has QR:</label>
+                <input id="has-qr" name="has-qr" type="checkbox" autocomplete="off" />
             </div>
+
+            <div id="qr-input">
+                <div id="i00" data-cell="00" class="qr-cell"></div>
+                <div id="i10" data-cell="10" class="qr-cell"></div>
+                <div id="i20" data-cell="20" class="qr-cell"></div>
+                <div id="i30" data-cell="30" class="qr-cell"></div>
+            
+                <div id="i01" data-cell="01" class="qr-cell"></div>
+                <div id="i11" data-cell="11" class="qr-cell"></div>
+                <div id="i21" data-cell="21" class="qr-cell"></div>
+                <div id="i31" data-cell="31" class="qr-cell"></div>
+            
+                <div id="i02" data-cell="02" class="qr-cell"></div>
+                <div id="i12" data-cell="12" class="qr-cell"></div>
+                <div id="i22" data-cell="22" class="qr-cell"></div>
+                <div id="i32" data-cell="32" class="qr-cell"></div>
+            
+                <div id="i03" data-cell="03" class="qr-cell"></div>
+                <div id="i13" data-cell="13" class="qr-cell"></div>
+                <div id="i23" data-cell="23" class="qr-cell"></div>
+                <div id="i33" data-cell="33" class="qr-cell"></div>
+            </div>
+
+            <p>
+                Resulting LEFEN: <span id="lefen">8/8/8/8/8/8/8/8/G/-1</span>
+            </p>
+
+            <p>
+                Resulting LEON: <span id="leon">8/8/8/8/1/G/-1</span>
+            </p>
 
         </div>
         <script>
