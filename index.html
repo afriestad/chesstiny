@@ -10,7 +10,6 @@
 
         <script>
             const myglobals = {
-                piece: "none",
                 COL_NAMES: ["a", "b", "c", "d", "e", "f", "g", "h"]
             };
 
@@ -218,15 +217,9 @@
             }
 
             function resetBoard() {
-                Array.from(document.getElementById("piece").querySelectorAll("img")).forEach(
-                    (element) => element.classList.remove("selected")
-                );
-
-                document.getElementById("piece").querySelector("#none").classList.add("selected");
-
-                myglobals.piece = "none";
-                const cells = Array.from(document.querySelectorAll(".cell"));
-                cells.forEach(updateImage);
+                writeBoardFromFenArray(makeArrayFromFen("8/8/8/8/8/8/8/8"));
+                writeColourFromShorthand("G");
+                writeQRFromString("-1");
             }
 
             function init() {
@@ -267,8 +260,6 @@
                 // Handle changes to the selected piece
                 document.getElementById("piece").addEventListener("click", (event) => {
                     event.stopPropagation();
-
-                    myglobals.piece = event.target.id;
 
                     Array.from(event.currentTarget.querySelectorAll(["#none", "img"])).forEach(
                         (element) => element.classList.remove("selected")
